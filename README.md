@@ -1,1 +1,1 @@
-# lazyledger-prototype
+# lazyledger
