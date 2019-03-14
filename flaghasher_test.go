@@ -10,7 +10,7 @@ import (
 func TestFlagHasher(t *testing.T) {
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
-    data := make([]byte, 10)
+    data := make([]byte, 100)
     rand.Read(data)
 
     fh.Write([]byte{0})

@@ -6,9 +6,6 @@ import (
 
 type namespaceDummyFlagger struct {}
 
-const namespaceSize = 4
-const flagSize = 8
-
 // NewNamespaceDummyFlagger returns a new dummy flagger for namespaced Merkle trees.
 func NewNamespaceDummyFlagger() Flagger {
     return &namespaceDummyFlagger{}
