@@ -26,7 +26,7 @@ type SimpleBlockStore struct {
 }
 
 // NewSimpleBlockStore creates a new empty simple block store.
-func NeSimpleBlockStore() *SimpleBlockStore {
+func NewSimpleBlockStore() *SimpleBlockStore {
     return &SimpleBlockStore{
         m: make(map[string]Block),
     }
