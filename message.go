@@ -1,5 +1,6 @@
 package lazyledger
 
+// Message represents a namespaced message.
 type Message struct {
     namespace [namespaceSize]byte
     data []byte

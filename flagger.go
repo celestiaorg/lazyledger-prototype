@@ -1,5 +1,6 @@
 package lazyledger
 
+// Flagger is an interface for computing the flags of bytes of data.
 type Flagger interface {
     // LeafFlag returns the flag of a raw unhashed leaf.
     LeafFlag([]byte) []byte

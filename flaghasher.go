@@ -52,9 +52,8 @@ func (d *flagDigest) rightFlag() []byte {
 func (d *flagDigest) parentFlag() []byte {
     if d.isLeaf() {
         return d.flagger.LeafFlag(d.mainData())
-    } else {
-        return d.flagger.Union(d.leftFlag(), d.rightFlag())
     }
+    return d.flagger.Union(d.leftFlag(), d.rightFlag())
 }
 
 func (d *flagDigest) mainData() []byte {
@@ -64,7 +63,6 @@ func (d *flagDigest) mainData() []byte {
 func (d *flagDigest) isLeaf() bool {
     if d.data[0] == byte(0) {
         return true
-    } else {
-        return false
     }
+    return false
 }
