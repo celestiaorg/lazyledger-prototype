@@ -52,6 +52,11 @@ func (sb *SimpleBlock) Digest() []byte {
 
 // Valid returns true if the block is valid.
 func (sb *SimpleBlock) Valid() bool {
+    if sb.messages == nil {
+        // Cannot validate block without messages.
+        return false
+    }
+
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
     tree := merkletree.New(fh)
