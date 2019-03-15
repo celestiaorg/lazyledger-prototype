@@ -1,6 +1,7 @@
 package lazyledger
 
 // Blockchain is a chain of blocks.
+// This is a prototype for testing purposes and thus does not support re-orgs, and there is no network stack.
 type Blockchain struct {
     blockStore BlockStore
 }
