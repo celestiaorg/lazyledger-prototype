@@ -7,4 +7,7 @@ type Block interface {
 
     // Digest computes the hash of the block.
     Digest() []byte
+
+    // Valid returns true if the block is valid.
+    Valid() bool
 }
