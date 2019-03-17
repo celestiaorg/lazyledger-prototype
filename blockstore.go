@@ -1,23 +1,10 @@
 package lazyledger
 
-import(
-    "fmt"
-)
-
 // BlockStore is a key-value store for blocks.
 type BlockStore interface {
     Get(key []byte) (Block, error) // Get gets the value for a key.
     Put(key []byte, value Block) error // Put updates the value for a key.
     Del(key []byte) error // Del deletes a key.
-}
-
-// InvalidKeyError is thrown when a key that does not exist is being accessed.
-type InvalidKeyError struct {
-    Key []byte
-}
-
-func (e *InvalidKeyError) Error() string {
-    return fmt.Sprintf("invalid key: %s", e.Key)
 }
 
 // SimpleBlockStore is a simple in-memory block store.

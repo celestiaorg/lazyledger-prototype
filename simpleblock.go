@@ -68,3 +68,7 @@ func (sb *SimpleBlock) Valid() bool {
     }
     return false
 }
+
+func (sb *SimpleBlock) PrevHash() []byte {
+    return sb.prevHash
+}

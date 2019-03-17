@@ -10,4 +10,7 @@ type Block interface {
 
     // Valid returns true if the block is valid.
     Valid() bool
+
+    // PrevHash returns the hash of the previous block.
+    PrevHash() []byte
 }
