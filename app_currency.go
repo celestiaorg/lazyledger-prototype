@@ -1,7 +1,7 @@
 package lazyledger
 
 import (
-    "github.com/libp2p/go-libp2p-crypto"
+    //"github.com/libp2p/go-libp2p-crypto"
 )
 
 // Demo cryptocurrency application.
@@ -35,5 +35,6 @@ func (c *Currency) SetBlockHead(hash []byte) {
 
 // BlockHead returns the hash of the latest block that has been processed.
 func (c *Currency) BlockHead() []byte {
-    return c.state.Get([]byte("__head__"))
+    head, _ := c.state.Get([]byte("__head__"))
+    return head
 }
