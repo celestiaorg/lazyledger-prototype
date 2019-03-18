@@ -4,7 +4,7 @@ import (
     "bytes"
     "crypto/sha256"
 
-    "github.com/NebulousLabs/merkletree"
+    "gitlab.com/NebulousLabs/merkletree"
 )
 
 // SimpleBlock represents a block designed for the Simple Validity Rule.
