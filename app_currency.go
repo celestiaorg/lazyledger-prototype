@@ -7,7 +7,7 @@ import (
     "github.com/libp2p/go-libp2p-crypto"
 )
 
-// Demo cryptocurrency application.
+// Currency is a demo cryptocurrency application.
 type Currency struct {
     state MapStore
 }

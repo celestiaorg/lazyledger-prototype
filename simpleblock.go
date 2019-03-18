@@ -69,10 +69,12 @@ func (sb *SimpleBlock) Valid() bool {
     return false
 }
 
+// PrevHash returns the hash of the previous block.
 func (sb *SimpleBlock) PrevHash() []byte {
     return sb.prevHash
 }
 
+// Messages returns the block's messages.
 func (sb *SimpleBlock) Messages() []Message {
     return sb.messages
 }
