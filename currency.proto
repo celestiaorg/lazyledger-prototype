@@ -1,0 +1,8 @@
+syntax = "proto2";
+package lazyledger;
+
+message CurrencyTransaction {
+    required bytes to = 1;
+    required bytes from = 2;
+    required int32 amount = 3;
+}
