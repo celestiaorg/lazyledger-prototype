@@ -72,3 +72,7 @@ func (sb *SimpleBlock) Valid() bool {
 func (sb *SimpleBlock) PrevHash() []byte {
     return sb.prevHash
 }
+
+func (sb *SimpleBlock) Messages() []Message {
+    return sb.messages
+}

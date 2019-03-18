@@ -13,4 +13,7 @@ type Block interface {
 
     // PrevHash returns the hash of the previous block.
     PrevHash() []byte
+
+    // Messages returns the block's messages.
+    Messages() []Message
 }

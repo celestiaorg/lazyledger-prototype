@@ -74,8 +74,8 @@ func (c *Currency) BlockHead() []byte {
     return head
 }
 
-// GenerateCurrencyTransaction generates a transaction message.
-func (c *Currency) GenerateCurrencyTransaction(fromPrivKey crypto.PrivKey, toPubKey crypto.PubKey, amount uint64) *Message {
+// GenerateTransaction generates a transaction message.
+func (c *Currency) GenerateTransaction(fromPrivKey crypto.PrivKey, toPubKey crypto.PubKey, amount uint64) Message {
     toPubKeyBytes, _ := toPubKey.Bytes()
     fromPubKeyBytes, _ := fromPrivKey.GetPublic().Bytes()
     transactionMessage := &CurrencyTransactionMessage{
@@ -91,5 +91,15 @@ func (c *Currency) GenerateCurrencyTransaction(fromPrivKey crypto.PrivKey, toPub
         Signature: signature,
     }
     messageData, _ := proto.Marshal(transaction)
-    return NewMessage(c.Namespace(), messageData)
+    return *NewMessage(c.Namespace(), messageData)
+}
+
+// Balance gets the balance of a public key.
+func (c *Currency) Balance(pubKey crypto.PubKey) uint64 {
+    pubKeyBytes, _ := pubKey.Bytes()
+    balance, err := c.state.Get(pubKeyBytes)
+    if err != nil {
+        return 0
+    }
+    return binary.BigEndian.Uint64(balance)
 }
