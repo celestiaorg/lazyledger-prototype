@@ -3,7 +3,7 @@ package lazyledger
 // Application is an interface for a lazyledger application.
 type Application interface {
     // ProcessMessage processes a message according to the application's state machine.
-    ProcessMessage(message Message) bool
+    ProcessMessage(message Message)
 
     // Namespace returns the namespace ID of the application.
     Namespace() [namespaceSize]byte

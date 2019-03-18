@@ -4,5 +4,11 @@ package lazyledger;
 message CurrencyTransaction {
     required bytes to = 1;
     required bytes from = 2;
-    required int32 amount = 3;
+    required uint64 amount = 3;
+    required bytes signature = 4;
+}
+
+message CurrencyTransactionMessage {
+    required bytes to = 1;
+    required uint64 amount = 2;
 }
