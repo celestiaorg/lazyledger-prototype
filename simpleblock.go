@@ -78,3 +78,25 @@ func (sb *SimpleBlock) PrevHash() []byte {
 func (sb *SimpleBlock) Messages() []Message {
     return sb.messages
 }
+
+// ApplicationProof creates a Merkle proof for all of the messages in a block for an application namespace.
+// TODO: Deal with case to prove that there is no relevant messages in the block.
+func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int, [][]byte) {
+    var proofStart int
+    var proofEnd int
+    var found bool
+    for index, message := range sb.messages {
+        if message.Namespace() == namespace {
+            if !found {
+                found = true
+                proofStart = index
+            }
+            proofEnd = index
+        }
+    }
+
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    proof, _ := merkletree.BuildRangeProof(proofStart, proofEnd, NewMessageSubtreeHasher(&sb.messages, fh))
+    return proofStart, proofEnd, proof
+}

@@ -16,4 +16,7 @@ type Block interface {
 
     // Messages returns the block's messages.
     Messages() []Message
+
+    // ApplicationProof creates a Merkle proof for all of the messages in a block for an application namespace.
+    ApplicationProof([namespaceSize]byte) (int, int, [][]byte)
 }
