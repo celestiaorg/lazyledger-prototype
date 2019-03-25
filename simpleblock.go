@@ -81,7 +81,7 @@ func (sb *SimpleBlock) Messages() []Message {
 
 // ApplicationProof creates a Merkle proof for all of the messages in a block for an application namespace.
 // TODO: Deal with case to prove that there is no relevant messages in the block.
-func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int, [][]byte) {
+func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int, [][]byte, *[]Message) {
     var proofStart int
     var proofEnd int
     var found bool
@@ -98,5 +98,51 @@ func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
     proof, _ := merkletree.BuildRangeProof(proofStart, proofEnd, NewMessageSubtreeHasher(&sb.messages, fh))
-    return proofStart, proofEnd, proof
+    proofMessages := sb.messages[proofStart:proofEnd]
+    return proofStart, proofEnd, proof, &proofMessages
+}
+
+// VerifyApplicationProof verifies a Merkle proof for all of the messages in a block for an application namespace.
+func (sb *SimpleBlock) VerifyApplicationProof(namespace [namespaceSize]byte, proofStart int, proofEnd int, proof [][]byte, messages *[]Message) bool {
+    // Verify Merkle proof
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    lh := NewMessageLeafHasher(messages, fh)
+    result, err := merkletree.VerifyRangeProof(lh, fh, proofStart, proofEnd, proof, sb.messagesRoot)
+    if !result || err != nil {
+        return false
+    }
+
+    // Verify proof completeness
+    var leafIndex uint64
+    var leftSubtrees [][]byte
+    var rightSubtrees [][]byte
+	consumeUntil := func(end uint64) error {
+		for leafIndex != end && len(proof) > 0 {
+			subtreeSize := nextSubtreeSize(leafIndex, end)
+            leftSubtrees = append(leftSubtrees, proof[0])
+			proof = proof[1:]
+			leafIndex += uint64(subtreeSize)
+		}
+		return nil
+	}
+    if err := consumeUntil(uint64(proofStart)); err != nil {
+        return false
+    }
+    rightSubtrees = proof
+
+    for _, subtree := range leftSubtrees {
+        _, max := dummyNamespacesFromFlag(subtree)
+        if bytes.Compare(max, namespace[:]) >= 0 {
+            return false
+        }
+    }
+    for _, subtree := range rightSubtrees {
+        min, _ := dummyNamespacesFromFlag(subtree)
+        if bytes.Compare(min, namespace[:]) <= 0 {
+            return false
+        }
+    }
+
+    return true
 }

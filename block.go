@@ -18,5 +18,8 @@ type Block interface {
     Messages() []Message
 
     // ApplicationProof creates a Merkle proof for all of the messages in a block for an application namespace.
-    ApplicationProof([namespaceSize]byte) (int, int, [][]byte)
+    ApplicationProof([namespaceSize]byte) (int, int, [][]byte, *[]Message)
+
+    // VerifyApplicationProof verifies a Merkle proof for all of the messages in a block for an application namespace.
+    VerifyApplicationProof([namespaceSize]byte, int, int, [][]byte, *[]Message) bool
 }
