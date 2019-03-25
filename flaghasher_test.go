@@ -18,7 +18,7 @@ func TestFlagHasher(t *testing.T) {
     leaf1 := fh.Sum(nil)
     fh.Reset()
     if (bytes.Compare(ndf.NodeFlag(leaf1), ndf.LeafFlag(data)) != 0) {
-        t.Errorf("flag for leaf node incorrect")
+        t.Error("flag for leaf node incorrect")
     }
 
     fh.Write([]byte{0})
@@ -26,7 +26,7 @@ func TestFlagHasher(t *testing.T) {
     leaf2 := fh.Sum(nil)
     fh.Reset()
     if (bytes.Compare(ndf.NodeFlag(leaf2), ndf.LeafFlag(data)) != 0) {
-        t.Errorf("flag for leaf node incorrect")
+        t.Error("flag for leaf node incorrect")
     }
 
     fh.Write([]byte{1})
@@ -35,6 +35,6 @@ func TestFlagHasher(t *testing.T) {
     parent := fh.Sum(nil)
     fh.Reset()
     if (bytes.Compare(ndf.NodeFlag(parent), ndf.Union(leaf1, leaf2)) != 0) {
-        t.Errorf("flag for parent node incorrect")
+        t.Error("flag for parent node incorrect")
     }
 }

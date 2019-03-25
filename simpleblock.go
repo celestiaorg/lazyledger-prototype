@@ -40,6 +40,15 @@ func ImportSimpleBlock(prevHash []byte, messages []Message) Block {
 // AddMessage adds a message to the block.
 func (sb *SimpleBlock) AddMessage(message Message) {
     sb.messages = append(sb.messages, message)
+
+    // Recompute the messagesRoot
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    tree := merkletree.New(fh)
+    for _, message := range sb.messages {
+        tree.Push(message.Marshal())
+    }
+    sb.messagesRoot = tree.Root()
 }
 
 // Digest computes the hash of the block.
@@ -91,7 +100,7 @@ func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int
                 found = true
                 proofStart = index
             }
-            proofEnd = index
+            proofEnd = index + 1
         }
     }
 

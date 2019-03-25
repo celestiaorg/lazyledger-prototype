@@ -31,6 +31,6 @@ func TestAppCurrency(t *testing.T) {
     b.ProcessBlock(sb)
 
     if app.Balance(pubA) != 900 || app.Balance(pubB) != 100 {
-        t.Errorf("test tranasaction failed: invalid post-balances")
+        t.Error("test tranasaction failed: invalid post-balances")
     }
 }
