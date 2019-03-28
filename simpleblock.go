@@ -89,8 +89,7 @@ func (sb *SimpleBlock) Messages() []Message {
 }
 
 // ApplicationProof creates a Merkle proof for all of the messages in a block for an application namespace.
-// TODO: Deal with case to prove that there is no relevant messages in the block.
-func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int, [][]byte, *[]Message) {
+func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int, [][]byte, *[]Message, [][]byte) {
     var proofStart int
     var proofEnd int
     var found bool
@@ -104,19 +103,60 @@ func (sb *SimpleBlock) ApplicationProof(namespace [namespaceSize]byte) (int, int
         }
     }
 
+    var inRange bool
+    if !found {
+        var prevMessage Message
+        // We need to generate a proof for an absence of relevant messages.
+        for index, message := range sb.messages {
+            if index != 0 {
+                prevNs := prevMessage.Namespace()
+                currentNs := message.Namespace()
+                if ((bytes.Compare(prevNs[:], namespace[:]) < 0 && bytes.Compare(namespace[:], currentNs[:]) < 0) ||
+                    (bytes.Compare(prevNs[:], namespace[:]) > 0 && bytes.Compare(namespace[:], currentNs[:]) > 0)) {
+                    if !inRange {
+                        inRange = true
+                        proofStart = index
+                    }
+                    proofEnd = index + 1
+                }
+            }
+            prevMessage = message
+        }
+    }
+
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
-    proof, _ := merkletree.BuildRangeProof(proofStart, proofEnd, NewMessageSubtreeHasher(&sb.messages, fh))
+    var proof [][]byte
+    if found || inRange {
+        proof, _ = merkletree.BuildRangeProof(proofStart, proofEnd, NewMessageSubtreeHasher(&sb.messages, fh))
+    }
     proofMessages := sb.messages[proofStart:proofEnd]
-    return proofStart, proofEnd, proof, &proofMessages
+    if found {
+        return proofStart, proofEnd, proof, &proofMessages, nil
+    }
+
+    var hashes [][]byte
+    for _, message := range proofMessages {
+        ndf := NewNamespaceDummyFlagger()
+        fh := NewFlagHasher(ndf, sha256.New())
+        hashes = append(hashes, leafSum(fh, message.Marshal()))
+        fh.Reset()
+    }
+
+    return proofStart, proofEnd, proof, nil, hashes
 }
 
 // VerifyApplicationProof verifies a Merkle proof for all of the messages in a block for an application namespace.
-func (sb *SimpleBlock) VerifyApplicationProof(namespace [namespaceSize]byte, proofStart int, proofEnd int, proof [][]byte, messages *[]Message) bool {
+func (sb *SimpleBlock) VerifyApplicationProof(namespace [namespaceSize]byte, proofStart int, proofEnd int, proof [][]byte, messages *[]Message, hashes [][]byte) bool {
     // Verify Merkle proof
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
-    lh := NewMessageLeafHasher(messages, fh)
+    var lh merkletree.LeafHasher
+    if messages != nil {
+        lh = NewMessageLeafHasher(messages, fh)
+    } else {
+        lh = NewHashLeafHasher(hashes)
+    }
     result, err := merkletree.VerifyRangeProof(lh, fh, proofStart, proofEnd, proof, sb.messagesRoot)
     if !result || err != nil {
         return false

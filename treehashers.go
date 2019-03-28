@@ -74,5 +74,31 @@ func (mlh *MessageLeafHasher) NextLeafHash() (leafHash []byte, err error) {
 
     leafHash = leafSum(mlh.h, (*mlh.messages)[mlh.pos].Marshal())
     err = nil
+    mlh.pos += 1
+    return
+}
+
+// HashLeafHasher implements the merkletree.LeafHasher interface from a slice of hashes.
+type HashLeafHasher struct {
+    hashes [][]byte
+    pos int
+}
+
+// NewHashLeafHasher returns a new MessageLeafHasher for a slice of hashes.
+func NewHashLeafHasher(hashes [][]byte) *HashLeafHasher {
+    return &HashLeafHasher{
+        hashes: hashes,
+    }
+}
+
+// NextLeafHash implements LeafHasher
+func (hlh *HashLeafHasher) NextLeafHash() (leafHash []byte, err error) {
+    if hlh.pos >= len(hlh.hashes) {
+        return nil, io.EOF
+    }
+
+    leafHash = hlh.hashes[hlh.pos]
+    err = nil
+    hlh.pos += 1
     return
 }
