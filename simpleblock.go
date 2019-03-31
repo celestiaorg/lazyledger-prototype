@@ -51,6 +51,11 @@ func (sb *SimpleBlock) AddMessage(message Message) {
     sb.messagesRoot = tree.Root()
 }
 
+// MessagesRoot returns the Merkle root of the messages in the block.
+func (sb *SimpleBlock) MessagesRoot() []byte {
+    return sb.messagesRoot
+}
+
 // Digest computes the hash of the block.
 func (sb *SimpleBlock) Digest() []byte {
     hasher := sha256.New()
