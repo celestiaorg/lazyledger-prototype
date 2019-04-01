@@ -1,4 +1,4 @@
-- probabilistic block application proofs
+- probabilistic block application message padding
 - probabilistic block validity function
 - currency app transaction inclusion constraint
 - generic state modification app
