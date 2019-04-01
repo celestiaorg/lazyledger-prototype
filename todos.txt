@@ -1,0 +1,5 @@
+- probabilistic block application proofs
+- probabilistic block validity function
+- currency app transaction inclusion constraint
+- generic state modification app
+- benchmarks
