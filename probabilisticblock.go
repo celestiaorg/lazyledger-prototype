@@ -218,6 +218,10 @@ func (pb *ProbabilisticBlock) ApplicationProof(namespace [namespaceSize]byte) (i
     if found || inRange {
         proofStartRow, proofStartColumn := pb.indexToCoordinates(proofStart)
         proofEndRow, proofEndColumn := pb.indexToCoordinates(proofEnd)
+        if proofEndColumn == 0 {
+            proofEndRow -= 1
+            proofEndColumn = pb.SquareWidth() / 2
+        }
         for i := 0; i < pb.SquareWidth() / 2; i++ {
             if i >= proofStartRow && i <= proofEndRow {
                 // This row needs Merkle proofs
@@ -268,6 +272,10 @@ func (pb *ProbabilisticBlock) VerifyApplicationProof(namespace [namespaceSize]by
 
     proofStartRow, proofStartColumn := pb.indexToCoordinates(proofStart)
     proofEndRow, proofEndColumn := pb.indexToCoordinates(proofEnd)
+    if proofEndColumn == 0 {
+        proofEndRow -= 1
+        proofEndColumn = pb.SquareWidth() / 2
+    }
     proofNum := 0
     for i := 0; i < pb.SquareWidth() / 2; i++ {
         if i >= proofStartRow && i <= proofEndRow {
