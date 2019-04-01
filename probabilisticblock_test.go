@@ -26,14 +26,14 @@ func TestProbabilisticBlock(t *testing.T) {
         t.Error("VerifyApplicationProof incorrectly returned false")
     }
 
-    /*proofStart, proofEnd, proofs, messages, hashes = pb.(*ProbabilisticBlock).ApplicationProof([namespaceSize]byte{2})
+    proofStart, proofEnd, proofs, messages, hashes = pb.(*ProbabilisticBlock).ApplicationProof([namespaceSize]byte{2})
     if messages != nil {
         t.Error("ApplicationProof incorrectly returned messages")
     }
     result = pb.(*ProbabilisticBlock).VerifyApplicationProof([namespaceSize]byte{2}, proofStart, proofEnd, proofs, messages, hashes)
     if !result {
         t.Error("VerifyApplicationProof incorrectly returned false")
-    }*/
+    }
 
     // TODO: add negative tests
 }
