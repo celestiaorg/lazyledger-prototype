@@ -12,6 +12,8 @@ func TestSimpleBlock(t *testing.T) {
     sb.AddMessage(*NewMessage([namespaceSize]byte{1}, []byte("foo")))
     sb.AddMessage(*NewMessage([namespaceSize]byte{1}, []byte("foo")))
     sb.AddMessage(*NewMessage([namespaceSize]byte{3}, []byte("foo")))
+    sb.AddMessage(*NewMessage([namespaceSize]byte{3}, []byte("foo")))
+    sb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foo")))
 
     proofStart, proofEnd, proof, messages, hashes := sb.ApplicationProof([namespaceSize]byte{1})
     if messages == nil {

@@ -42,7 +42,7 @@ func (d *flagDigest) Reset() {
 }
 
 func (d *flagDigest) leftFlag() []byte {
-    return d.flagger.NodeFlag(d.data[1:d.Size()])
+    return d.flagger.NodeFlag(d.data[1:d.Size()+1])
 }
 
 func (d *flagDigest) rightFlag() []byte {
