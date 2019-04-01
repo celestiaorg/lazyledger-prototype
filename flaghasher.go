@@ -8,6 +8,7 @@ type flagDigest struct {
     flagger Flagger
     baseHasher hash.Hash
     data []byte
+    codedMode bool
 }
 
 // NewFlagHasher returns a new hash.Hash computing checksums using the bashHasher with flags from flagger.
@@ -16,6 +17,10 @@ func NewFlagHasher(flagger Flagger, baseHasher hash.Hash) hash.Hash {
         flagger: flagger,
         baseHasher: baseHasher,
     }
+}
+
+func (d *flagDigest) setCodedMode(mode bool) {
+    d.codedMode = mode
 }
 
 func (d *flagDigest) Write(p []byte) (int, error) {
@@ -51,6 +56,9 @@ func (d *flagDigest) rightFlag() []byte {
 
 func (d *flagDigest) parentFlag() []byte {
     if d.isLeaf() {
+        if d.codedMode {
+            return codedFlag[:]
+        }
         return d.flagger.LeafFlag(d.mainData())
     }
     return d.flagger.Union(d.leftFlag(), d.rightFlag())

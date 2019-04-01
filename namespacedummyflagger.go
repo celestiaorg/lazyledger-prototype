@@ -27,6 +27,9 @@ func (namespaceDummyFlagger) Union(leftFlag []byte, rightFlag []byte) []byte {
     minNamespace := namespaces[0]
     maxNamespace := namespaces[0]
     for _, namespace := range namespaces[1:] {
+        if bytes.Compare(namespace, codedNamespace[:]) == 0 {
+            continue
+        }
         if bytes.Compare(minNamespace, namespace) > 0 {
             minNamespace = namespace
         }
