@@ -3,6 +3,7 @@ package lazyledger
 import (
     "bytes"
     "crypto/sha256"
+    "math"
 
     "gitlab.com/NebulousLabs/merkletree"
     "github.com/musalbas/rsmt2d"
@@ -19,31 +20,35 @@ type ProbabilisticBlock struct {
     squareWidth int
     headerOnly bool
     cachedEds *rsmt2d.ExtendedDataSquare
+    messageSize int
 }
 
 // NewProbabilisticBlock returns a new probabilistic block.
-func NewProbabilisticBlock(prevHash []byte) Block {
+func NewProbabilisticBlock(prevHash []byte, messageSize int) Block {
     return &ProbabilisticBlock{
         prevHash: prevHash,
+        messageSize: messageSize,
     }
 }
 
 // ImportProbabilisticBlockBlockHeader imports a received probabilistic block without the messages.
-func ImportProbabilisticBlockHeader(prevHash []byte, rowRoots [][]byte, columnRoots [][]byte, squareWidth int) Block {
+func ImportProbabilisticBlockHeader(prevHash []byte, rowRoots [][]byte, columnRoots [][]byte, squareWidth int, messageSize int) Block {
     return &ProbabilisticBlock{
         prevHash: prevHash,
         rowRoots: rowRoots,
         columnRoots: columnRoots,
         squareWidth: squareWidth,
         headerOnly: true,
+        messageSize: messageSize,
     }
 }
 
 // ImportProbabilisticBlock imports a received probabilistic block.
-func ImportProbabilisticBlock(prevHash []byte, messages []Message) Block {
-    return &SimpleBlock{
+func ImportProbabilisticBlock(prevHash []byte, messages []Message, messageSize int) Block {
+    return &ProbabilisticBlock{
         prevHash: prevHash,
         messages: messages,
+        messageSize: messageSize,
     }
 }
 
@@ -67,14 +72,25 @@ func (pb *ProbabilisticBlock) AddMessage(message Message) {
 func (pb *ProbabilisticBlock) messagesBytes() [][]byte {
     messagesBytes := make([][]byte, len(pb.messages))
     for index, message := range pb.messages {
-        messagesBytes[index] = message.Marshal()
+        messagesBytes[index] = message.MarshalPadded(pb.messageSize)
     }
     return messagesBytes
 }
 
 func (pb *ProbabilisticBlock) eds() *rsmt2d.ExtendedDataSquare {
     if pb.cachedEds == nil {
-        pb.cachedEds, _ = rsmt2d.ComputeExtendedDataSquare(pb.messagesBytes(), rsmt2d.CodecRSGF8)
+        data := pb.messagesBytes()
+        missingShares := int(math.Pow(math.Ceil(math.Sqrt(float64(len(data)))), 2)) - len(data)
+        paddingShare := make([]byte, pb.messageSize)
+        for i := 0; i < pb.messageSize; i++ {
+            paddingShare[i] = 0xFF // this will ensure it will be treated like a redundancy share
+        }
+        for i := 0; i < missingShares; i++ {
+            freshPaddingShare := make([]byte, pb.messageSize)
+            copy(freshPaddingShare, paddingShare)
+            data = append(data, freshPaddingShare)
+        }
+        pb.cachedEds, _ = rsmt2d.ComputeExtendedDataSquare(data, rsmt2d.CodecRSGF8)
     }
 
     return pb.cachedEds
@@ -251,7 +267,7 @@ func (pb *ProbabilisticBlock) ApplicationProof(namespace [namespaceSize]byte) (i
     for _, message := range proofMessages {
         ndf := NewNamespaceDummyFlagger()
         fh := NewFlagHasher(ndf, sha256.New())
-        hashes = append(hashes, leafSum(fh, message.Marshal()))
+        hashes = append(hashes, leafSum(fh, message.MarshalPadded(pb.messageSize)))
         fh.Reset()
     }
 
@@ -265,7 +281,7 @@ func (pb *ProbabilisticBlock) VerifyApplicationProof(namespace [namespaceSize]by
     fh := NewFlagHasher(ndf, sha256.New())
     var lh merkletree.LeafHasher
     if messages != nil {
-        lh = NewMessageLeafHasher(messages, fh)
+        lh = NewPaddedMessageLeafHasher(messages, fh, pb.messageSize)
     } else {
         lh = NewHashLeafHasher(hashes)
     }

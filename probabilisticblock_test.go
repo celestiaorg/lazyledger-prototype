@@ -5,7 +5,7 @@ import (
 )
 
 func TestProbabilisticBlock(t *testing.T) {
-    pb := NewProbabilisticBlock([]byte{0})
+    pb := NewProbabilisticBlock([]byte{0}, 512)
 
     pb.AddMessage(*NewMessage([namespaceSize]byte{0}, []byte("foo")))
     pb.AddMessage(*NewMessage([namespaceSize]byte{1}, []byte("foo")))
@@ -14,8 +14,7 @@ func TestProbabilisticBlock(t *testing.T) {
     pb.AddMessage(*NewMessage([namespaceSize]byte{3}, []byte("foo")))
     pb.AddMessage(*NewMessage([namespaceSize]byte{3}, []byte("foo")))
     pb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foo")))
-    pb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foo")))
-    pb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foob")))
 
     proofStart, proofEnd, proofs, messages, hashes := pb.(*ProbabilisticBlock).ApplicationProof([namespaceSize]byte{1})
     if messages == nil {

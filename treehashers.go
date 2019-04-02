@@ -56,6 +56,7 @@ type MessageLeafHasher struct {
     messages *[]Message
     h hash.Hash
     pos int
+    messageSize int
 }
 
 // NewMessageLeafHasher returns a new MessageLeafHasher for a pointer to a slice of messages.
@@ -66,13 +67,26 @@ func NewMessageLeafHasher(messages *[]Message, h hash.Hash) *MessageLeafHasher {
     }
 }
 
+// NewPaddedMessageLeafHasher returns a new MessageLeafHasher for a pointer to a slice of messages, where messages should be padded.
+func NewPaddedMessageLeafHasher(messages *[]Message, h hash.Hash, messageSize int) *MessageLeafHasher {
+    return &MessageLeafHasher{
+        messages: messages,
+        h: h,
+        messageSize: messageSize,
+    }
+}
+
 // NextLeafHash implements LeafHasher
 func (mlh *MessageLeafHasher) NextLeafHash() (leafHash []byte, err error) {
     if mlh.pos >= len(*mlh.messages) {
         return nil, io.EOF
     }
 
-    leafHash = leafSum(mlh.h, (*mlh.messages)[mlh.pos].Marshal())
+    if mlh.messageSize > 0 {
+        leafHash = leafSum(mlh.h, (*mlh.messages)[mlh.pos].MarshalPadded(mlh.messageSize))
+    } else {
+        leafHash = leafSum(mlh.h, (*mlh.messages)[mlh.pos].Marshal())
+    }
     err = nil
     mlh.pos += 1
     return
