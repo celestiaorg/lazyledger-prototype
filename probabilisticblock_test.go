@@ -56,3 +56,21 @@ func TestProbabilisticBlock(t *testing.T) {
 
     // TODO: add negative tests
 }
+
+func TestProbabilisticBlockValidity(t *testing.T) {
+    pb := NewProbabilisticBlock([]byte{0}, 512)
+
+    pb.AddMessage(*NewMessage([namespaceSize]byte{0}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{1}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{1}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{1}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{3}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{3}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foo")))
+    pb.AddMessage(*NewMessage([namespaceSize]byte{4}, []byte("foob")))
+
+    request, _ := pb.(*ProbabilisticBlock).RequestSamples(20)
+    if len(request.Indexes) != 20 || len(request.Axes) != 20 {
+        t.Error("sample request didn't return enough samples")
+    }
+}

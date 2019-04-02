@@ -3,7 +3,9 @@ package lazyledger
 import (
     "bytes"
     "crypto/sha256"
+    "crypto/rand"
     "math"
+    "math/big"
 
     "gitlab.com/NebulousLabs/merkletree"
     "github.com/musalbas/rsmt2d"
@@ -21,6 +23,18 @@ type ProbabilisticBlock struct {
     headerOnly bool
     cachedEds *rsmt2d.ExtendedDataSquare
     messageSize int
+    validated bool
+    sampleRequest *SampleRequest
+}
+
+type SampleRequest struct {
+    Indexes []int
+    Axes []int
+}
+
+type SampleResponse struct {
+    Proofs [][][]byte
+    Shares [][]byte
 }
 
 // NewProbabilisticBlock returns a new probabilistic block.
@@ -32,7 +46,7 @@ func NewProbabilisticBlock(prevHash []byte, messageSize int) Block {
 }
 
 // ImportProbabilisticBlockBlockHeader imports a received probabilistic block without the messages.
-func ImportProbabilisticBlockHeader(prevHash []byte, rowRoots [][]byte, columnRoots [][]byte, squareWidth int, messageSize int) Block {
+func ImportProbabilisticBlockHeader(prevHash []byte, rowRoots [][]byte, columnRoots [][]byte, squareWidth int, messageSize int, validated bool) Block {
     return &ProbabilisticBlock{
         prevHash: prevHash,
         rowRoots: rowRoots,
@@ -40,15 +54,17 @@ func ImportProbabilisticBlockHeader(prevHash []byte, rowRoots [][]byte, columnRo
         squareWidth: squareWidth,
         headerOnly: true,
         messageSize: messageSize,
+        validated: validated,
     }
 }
 
 // ImportProbabilisticBlock imports a received probabilistic block.
-func ImportProbabilisticBlock(prevHash []byte, messages []Message, messageSize int) Block {
+func ImportProbabilisticBlock(prevHash []byte, messages []Message, messageSize int, validated bool) Block {
     return &ProbabilisticBlock{
         prevHash: prevHash,
         messages: messages,
         messageSize: messageSize,
+        validated: validated,
     }
 }
 
@@ -156,6 +172,38 @@ func (pb *ProbabilisticBlock) computeRoots() {
     pb.cachedColumnRoots = columnRoots
 }
 
+func (pb *ProbabilisticBlock) RequestSamples(n int) (*SampleRequest, error) {
+    indexes := make([]int, n)
+    axes := make([]int, n)
+    for i := 0; i < n; i++ {
+        val, err := rand.Int(rand.Reader, big.NewInt(int64(math.Pow(float64(pb.SquareWidth()), 2))))
+        if err != nil {
+            return nil, err
+        }
+        indexes[i] = int(val.Int64())
+        val, err = rand.Int(rand.Reader, big.NewInt(2))
+        if err != nil {
+            return nil, err
+        }
+        axes[i] = int(val.Int64())
+    }
+
+    pb.sampleRequest = &SampleRequest{
+        Indexes: indexes,
+        Axes: axes,
+    }
+
+    return pb.sampleRequest, nil
+}
+
+func (pb *ProbabilisticBlock) RespondSamples(request *SampleRequest) *SampleResponse {
+    return nil
+}
+
+func (pb *ProbabilisticBlock) ProcessSamplesResponse(response *SampleResponse) bool {
+    return false
+}
+
 // Digest computes the hash of the block.
 func (pb *ProbabilisticBlock) Digest() []byte {
     hasher := sha256.New()
@@ -171,8 +219,7 @@ func (pb *ProbabilisticBlock) Digest() []byte {
 
 // Valid returns true if the block is valid.
 func (pb *ProbabilisticBlock) Valid() bool {
-    return false // TODO
-    // This should true true if there are a bunch of valid random samples.
+    return pb.validated
 }
 
 // PrevHash returns the hash of the previous block.
