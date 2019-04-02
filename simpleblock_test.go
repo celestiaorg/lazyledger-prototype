@@ -24,6 +24,16 @@ func TestSimpleBlock(t *testing.T) {
         t.Error("VerifyApplicationProof incorrectly returned false")
     }
 
+    proofStart, proofEnd, proof, messages, hashes = sb.(*SimpleBlock).ApplicationProof([namespaceSize]byte{1})
+    proof[0][0] = 0xFF
+    if messages == nil {
+        t.Error("ApplicationProof incorrectly returned no messages")
+    }
+    result = sb.(*SimpleBlock).VerifyApplicationProof([namespaceSize]byte{1}, proofStart, proofEnd, proof, messages, hashes)
+    if result {
+        t.Error("VerifyApplicationProof incorrectly returned true")
+    }
+
     proofStart, proofEnd, proof, messages, hashes = sb.(*SimpleBlock).ApplicationProof([namespaceSize]byte{2})
     if messages != nil {
         t.Error("ApplicationProof incorrectly returned messages")
@@ -33,5 +43,13 @@ func TestSimpleBlock(t *testing.T) {
         t.Error("VerifyApplicationProof incorrectly returned false")
     }
 
-    // TODO: add negative tests
+    proofStart, proofEnd, proof, messages, hashes = sb.(*SimpleBlock).ApplicationProof([namespaceSize]byte{2})
+    proof[0][0] = 0xFF
+    if messages != nil {
+        t.Error("ApplicationProof incorrectly returned messages")
+    }
+    result = sb.(*SimpleBlock).VerifyApplicationProof([namespaceSize]byte{2}, proofStart, proofEnd, proof, messages, hashes)
+    if result {
+        t.Error("VerifyApplicationProof incorrectly returned true")
+    }
 }
