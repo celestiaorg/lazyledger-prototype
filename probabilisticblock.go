@@ -197,11 +197,62 @@ func (pb *ProbabilisticBlock) RequestSamples(n int) (*SampleRequest, error) {
 }
 
 func (pb *ProbabilisticBlock) RespondSamples(request *SampleRequest) *SampleResponse {
-    return nil
+    var proofs [][][]byte
+    var shares [][]byte
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    for x, index := range request.Indexes {
+        r, c := pb.indexToCoordinates(index)
+
+        // Add share to response
+        shares = append(shares, pb.eds().Cell(uint(r), uint(c)))
+
+        // Add Merkle proof to response
+        var data [][]byte
+        if request.Axes[x] == 0 { // row
+            data = pb.eds().Row(uint(r))
+        } else { // column
+            data = pb.eds().Column(uint(c))
+        }
+        tree := merkletree.New(fh)
+        tree.SetIndex(uint64(index))
+        for _, share := range data {
+            tree.Push(share)
+        }
+        _, proof, _, _ := tree.Prove()
+        proofs = append(proofs, proof)
+    }
+
+    return &SampleResponse{
+        Proofs: proofs,
+        Shares: shares,
+    }
 }
 
 func (pb *ProbabilisticBlock) ProcessSamplesResponse(response *SampleResponse) bool {
-    return false
+    if len(response.Proofs) != len(pb.sampleRequest.Indexes) || len(response.Shares) != len(pb.sampleRequest.Indexes) {
+        return false
+    }
+
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    for x, index := range pb.sampleRequest.Indexes {
+        r, c := pb.indexToCoordinates(index)
+        var root []byte
+        if pb.sampleRequest.Axes[x] == 0 { // row
+            root = pb.RowRoots()[r]
+        } else { // column
+            root = pb.ColumnRoots()[c]
+        }
+        result := merkletree.VerifyProof(fh, root, response.Proofs[x], uint64(index), uint64(pb.SquareWidth()))
+        if !result {
+            return false
+        }
+
+        // TODO: verify that share matches proof here
+    }
+
+    return true
 }
 
 // Digest computes the hash of the block.
