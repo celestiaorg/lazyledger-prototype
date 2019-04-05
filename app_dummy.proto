@@ -1,0 +1,6 @@
+syntax = "proto2";
+package lazyledger;
+
+message DummyAppTransaction {
+    map<string, string> puts = 1;
+}

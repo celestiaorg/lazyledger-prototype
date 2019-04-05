@@ -1,4 +1,3 @@
-- generic state modification app
 - name registrar app
 - ico app
 - benchmarks
