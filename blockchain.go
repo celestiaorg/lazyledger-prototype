@@ -31,6 +31,14 @@ func (b *Blockchain) ProcessBlock(block Block) {
     }
 }
 
+func (b *Blockchain) Block(digest []byte) (Block, error) {
+    block, err := b.blockStore.Get(digest)
+    if err != nil {
+        return nil, err
+    }
+    return block, nil
+}
+
 // RegisterApplication registers an application instance to call when new relevant messages arrive.
 func (b *Blockchain) RegisterApplication(application *Application) {
     b.applications = append(b.applications, application)

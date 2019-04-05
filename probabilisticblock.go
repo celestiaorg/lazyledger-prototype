@@ -25,6 +25,7 @@ type ProbabilisticBlock struct {
     messageSize int
     validated bool
     sampleRequest *SampleRequest
+    provenDependencies map[string]bool
 }
 
 type SampleRequest struct {
@@ -41,6 +42,7 @@ func NewProbabilisticBlock(prevHash []byte, messageSize int) Block {
     return &ProbabilisticBlock{
         prevHash: prevHash,
         messageSize: messageSize,
+        provenDependencies: make(map[string]bool),
     }
 }
 
@@ -54,6 +56,7 @@ func ImportProbabilisticBlockHeader(prevHash []byte, rowRoots [][]byte, columnRo
         headerOnly: true,
         messageSize: messageSize,
         validated: validated,
+        provenDependencies: make(map[string]bool),
     }
 }
 
@@ -64,6 +67,7 @@ func ImportProbabilisticBlock(prevHash []byte, messages []Message, messageSize i
         messages: messages,
         messageSize: messageSize,
         validated: validated,
+        provenDependencies: make(map[string]bool),
     }
 }
 
@@ -465,4 +469,35 @@ func (pb *ProbabilisticBlock) VerifyApplicationProof(namespace [namespaceSize]by
     }
 
     return true
+}
+
+func (pb *ProbabilisticBlock) ProveDependency(index int) ([]byte, [][]byte, error) {
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    r, c := pb.indexToCoordinates(index)
+    proof, err := merkletree.BuildRangeProof(c, c + 1, NewCodedAxisSubtreeHasher(pb.eds().Row(uint(r)), fh))
+    if err != nil {
+        return nil, nil, err
+    }
+    return leafSum(fh, pb.messages[index].MarshalPadded(pb.messageSize)), proof, nil
+}
+
+func (pb *ProbabilisticBlock) VerifyDependency(index int, hash []byte, proof [][]byte) bool {
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    lh := NewHashLeafHasher([][]byte{hash})
+    r, c := pb.indexToCoordinates(index)
+    result, err := merkletree.VerifyRangeProof(lh, fh, c, c + 1, proof, pb.RowRoots()[r])
+    if result && err == nil {
+        pb.provenDependencies[string(hash)] = true
+        return true
+    }
+    return false
+}
+
+func (pb *ProbabilisticBlock) DependencyProven(hash []byte) bool {
+    if value, ok := pb.provenDependencies[string(hash)]; ok {
+        return value
+    }
+    return false
 }

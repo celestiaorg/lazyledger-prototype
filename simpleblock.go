@@ -12,12 +12,14 @@ type SimpleBlock struct {
     prevHash []byte
     messages []Message
     messagesRoot []byte
+    provenDependencies map[string]bool
 }
 
 // NewSimpleBlock returns a new simple block.
 func NewSimpleBlock(prevHash []byte) Block {
     return &SimpleBlock{
         prevHash: prevHash,
+        provenDependencies: make(map[string]bool),
     }
 }
 
@@ -26,6 +28,7 @@ func ImportSimpleBlockHeader(prevHash []byte, messagesRoot []byte) Block {
     return &SimpleBlock{
         prevHash: prevHash,
         messagesRoot: messagesRoot,
+        provenDependencies: make(map[string]bool),
     }
 }
 
@@ -34,6 +37,7 @@ func ImportSimpleBlock(prevHash []byte, messages []Message) Block {
     return &SimpleBlock{
         prevHash: prevHash,
         messages: messages,
+        provenDependencies: make(map[string]bool),
     }
 }
 
@@ -199,4 +203,33 @@ func (sb *SimpleBlock) VerifyApplicationProof(namespace [namespaceSize]byte, pro
     }
 
     return true
+}
+
+func (sb *SimpleBlock) ProveDependency(index int) ([]byte, [][]byte, error) {
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    proof, err := merkletree.BuildRangeProof(index, index + 1, NewMessageSubtreeHasher(&sb.messages, fh))
+    if err != nil {
+        return nil, nil, err
+    }
+    return leafSum(fh, sb.messages[index].Marshal()), proof, nil
+}
+
+func (sb *SimpleBlock) VerifyDependency(index int, hash []byte, proof [][]byte) bool {
+    ndf := NewNamespaceDummyFlagger()
+    fh := NewFlagHasher(ndf, sha256.New())
+    lh := NewHashLeafHasher([][]byte{hash})
+    result, err := merkletree.VerifyRangeProof(lh, fh, index, index + 1, proof, sb.messagesRoot)
+    if result && err == nil {
+        sb.provenDependencies[string(hash)] = true
+        return true
+    }
+    return false
+}
+
+func (sb *SimpleBlock) DependencyProven(hash []byte) bool {
+    if value, ok := sb.provenDependencies[string(hash)]; ok {
+        return value
+    }
+    return false
 }

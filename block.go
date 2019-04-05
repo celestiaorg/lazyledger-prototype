@@ -22,4 +22,10 @@ type Block interface {
 
     // VerifyApplicationProof verifies a Merkle proof for all of the messages in a block for an application namespace.
     //VerifyApplicationProof([namespaceSize]byte, int, int, [][]byte, *[]Message, [][]byte) bool
+
+    ProveDependency(int) ([]byte, [][]byte, error)
+
+    VerifyDependency(int, []byte, [][]byte) bool
+
+    DependencyProven([]byte) bool
 }

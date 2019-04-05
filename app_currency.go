@@ -10,12 +10,14 @@ import (
 // Currency is a demo cryptocurrency application.
 type Currency struct {
     state MapStore
+    b *Blockchain
 }
 
 // NewCurrency creates a new currency instance.
-func NewCurrency(state MapStore) *Currency {
+func NewCurrency(state MapStore, b *Blockchain) *Currency {
     return &Currency{
         state: state,
+        b: b,
     }
 }
 
@@ -26,9 +28,20 @@ func (c *Currency) ProcessMessage(message Message) {
     if err != nil {
         return
     }
+    if transaction.Dependency != nil {
+        block, err := c.b.Block(c.BlockHead())
+        if err != nil {
+            return
+        }
+        dependencyProven := block.DependencyProven(transaction.Dependency)
+        if !dependencyProven {
+            return
+        }
+    }
     transactionMessage := &CurrencyTransactionMessage{
         To: transaction.To,
         Amount: transaction.Amount,
+        Dependency: transaction.Dependency,
     }
     signedData, err := proto.Marshal(transactionMessage)
     fromKey, err := crypto.UnmarshalPublicKey(transaction.From)
@@ -75,12 +88,13 @@ func (c *Currency) BlockHead() []byte {
 }
 
 // GenerateTransaction generates a transaction message.
-func (c *Currency) GenerateTransaction(fromPrivKey crypto.PrivKey, toPubKey crypto.PubKey, amount uint64) Message {
+func (c *Currency) GenerateTransaction(fromPrivKey crypto.PrivKey, toPubKey crypto.PubKey, amount uint64, dependency []byte) Message {
     toPubKeyBytes, _ := toPubKey.Bytes()
     fromPubKeyBytes, _ := fromPrivKey.GetPublic().Bytes()
     transactionMessage := &CurrencyTransactionMessage{
         To: toPubKeyBytes,
         Amount: &amount,
+        Dependency: dependency,
     }
     signedData, _ := proto.Marshal(transactionMessage)
     signature, _ := fromPrivKey.Sign(signedData)
@@ -89,6 +103,7 @@ func (c *Currency) GenerateTransaction(fromPrivKey crypto.PrivKey, toPubKey cryp
         From: fromPubKeyBytes,
         Amount: &amount,
         Signature: signature,
+        Dependency: dependency,
     }
     messageData, _ := proto.Marshal(transaction)
     return *NewMessage(c.Namespace(), messageData)
