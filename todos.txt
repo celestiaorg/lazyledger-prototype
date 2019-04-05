@@ -1,4 +1,5 @@
-- probabilistic block validity function
 - currency app transaction inclusion constraint
 - generic state modification app
+- name registrar app
+- ico app
 - benchmarks

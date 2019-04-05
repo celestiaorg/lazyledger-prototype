@@ -53,8 +53,6 @@ func TestProbabilisticBlock(t *testing.T) {
     if result {
         t.Error("VerifyApplicationProof incorrectly returned true")
     }
-
-    // TODO: add negative tests
 }
 
 func TestProbabilisticBlockValidity(t *testing.T) {
@@ -72,5 +70,10 @@ func TestProbabilisticBlockValidity(t *testing.T) {
     request, _ := pb.(*ProbabilisticBlock).RequestSamples(20)
     if len(request.Indexes) != 20 || len(request.Axes) != 20 {
         t.Error("sample request didn't return enough samples")
+    }
+
+    response := pb.(*ProbabilisticBlock).RespondSamples(request)
+    if !pb.(*ProbabilisticBlock).ProcessSamplesResponse(response) {
+        t.Error("processing of samples response incorrectly returned false")
     }
 }

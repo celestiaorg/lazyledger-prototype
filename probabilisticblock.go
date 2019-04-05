@@ -34,7 +34,6 @@ type SampleRequest struct {
 
 type SampleResponse struct {
     Proofs [][][]byte
-    Shares [][]byte
 }
 
 // NewProbabilisticBlock returns a new probabilistic block.
@@ -198,58 +197,68 @@ func (pb *ProbabilisticBlock) RequestSamples(n int) (*SampleRequest, error) {
 
 func (pb *ProbabilisticBlock) RespondSamples(request *SampleRequest) *SampleResponse {
     var proofs [][][]byte
-    var shares [][]byte
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
     for x, index := range request.Indexes {
-        r, c := pb.indexToCoordinates(index)
-
-        // Add share to response
-        shares = append(shares, pb.eds().Cell(uint(r), uint(c)))
+        r, c := pb.shareIndexToCoordinates(index)
 
         // Add Merkle proof to response
         var data [][]byte
+        tree := merkletree.New(fh)
         if request.Axes[x] == 0 { // row
             data = pb.eds().Row(uint(r))
+            tree.SetIndex(uint64(c))
+            if r >= pb.SquareWidth() / 2 {
+                fh.(*flagDigest).setCodedMode(true)
+            }
         } else { // column
             data = pb.eds().Column(uint(c))
+            tree.SetIndex(uint64(r))
+            if c >= pb.SquareWidth() / 2 {
+                fh.(*flagDigest).setCodedMode(true)
+            }
         }
-        tree := merkletree.New(fh)
-        tree.SetIndex(uint64(index))
-        for _, share := range data {
+        for j, share := range data {
+            if j >= pb.SquareWidth() / 2 {
+                fh.(*flagDigest).setCodedMode(true)
+            }
             tree.Push(share)
         }
+        fh.(*flagDigest).setCodedMode(false)
         _, proof, _, _ := tree.Prove()
         proofs = append(proofs, proof)
     }
 
     return &SampleResponse{
         Proofs: proofs,
-        Shares: shares,
     }
 }
 
 func (pb *ProbabilisticBlock) ProcessSamplesResponse(response *SampleResponse) bool {
-    if len(response.Proofs) != len(pb.sampleRequest.Indexes) || len(response.Shares) != len(pb.sampleRequest.Indexes) {
+    if len(response.Proofs) != len(pb.sampleRequest.Indexes) {
         return false
     }
 
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
     for x, index := range pb.sampleRequest.Indexes {
-        r, c := pb.indexToCoordinates(index)
+        r, c := pb.shareIndexToCoordinates(index)
         var root []byte
+        var result bool
+        if r >= pb.SquareWidth() / 2 || c >= pb.SquareWidth() / 2 {
+            fh.(*flagDigest).setCodedMode(true)
+        }
         if pb.sampleRequest.Axes[x] == 0 { // row
             root = pb.RowRoots()[r]
+            result = merkletree.VerifyProof(fh, root, response.Proofs[x], uint64(c), uint64(pb.SquareWidth()))
         } else { // column
             root = pb.ColumnRoots()[c]
+            result = merkletree.VerifyProof(fh, root, response.Proofs[x], uint64(r), uint64(pb.SquareWidth()))
         }
-        result := merkletree.VerifyProof(fh, root, response.Proofs[x], uint64(index), uint64(pb.SquareWidth()))
+        fh.(*flagDigest).setCodedMode(false)
         if !result {
             return false
         }
-
-        // TODO: verify that share matches proof here
     }
 
     return true
@@ -286,6 +295,12 @@ func (pb *ProbabilisticBlock) Messages() []Message {
 func (pb *ProbabilisticBlock) indexToCoordinates(index int) (row, column int) {
     row = index / (pb.SquareWidth() / 2)
     column = index % (pb.SquareWidth() / 2)
+    return
+}
+
+func (pb *ProbabilisticBlock) shareIndexToCoordinates(index int) (row, column int) {
+    row = index / pb.SquareWidth()
+    column = index % pb.SquareWidth()
     return
 }
 
