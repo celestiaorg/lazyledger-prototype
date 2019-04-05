@@ -1,7 +1,7 @@
 package lazyledger
 
-const namespaceSize = 32
-const flagSize = 64
+const namespaceSize = 8
+const flagSize = 16
 
 var codedNamespace [namespaceSize]byte
 var codedFlag [flagSize]byte

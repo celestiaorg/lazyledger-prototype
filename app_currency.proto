@@ -6,9 +6,11 @@ message CurrencyTransaction {
     required bytes from = 2;
     required uint64 amount = 3;
     required bytes signature = 4;
+    repeated bytes dependencies = 5;
 }
 
 message CurrencyTransactionMessage {
     required bytes to = 1;
     required uint64 amount = 2;
+    repeated bytes dependencies = 3;
 }
