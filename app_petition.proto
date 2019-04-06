@@ -1,0 +1,19 @@
+syntax = "proto2";
+package lazyledger;
+
+message PetitionAppTransaction {
+    oneof message {
+        AddPetitionMessage apm = 1;
+        SignPetitionMessage spm = 2;
+    }
+}
+
+message AddPetitionMessage {
+    required string text = 1;
+}
+
+message SignPetitionMessage {
+    required uint64 id = 1;
+    required bytes signature = 2;
+    required bytes signer = 3;
+}
