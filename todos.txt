@@ -1,3 +1,2 @@
-- name registrar app (dependency on currency app)
 - petition app (no dependency)
 - benchmarks
