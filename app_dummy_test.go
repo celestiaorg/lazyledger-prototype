@@ -13,18 +13,16 @@ func TestAppDummySimpleBlock(t *testing.T) {
 
     ms := NewSimpleMap()
     app := NewDummyApp(ms)
-    var regApp Application
-    regApp = app
-    b.RegisterApplication(&regApp)
+    b.RegisterApplication(&app)
 
     puts := make(map[string]string)
     puts["foo"] = "bar"
     puts["goo"] = "tar"
 
-    sb.AddMessage(app.GenerateTransaction(puts))
+    sb.AddMessage(app.(*DummyApp).GenerateTransaction(puts))
     b.ProcessBlock(sb)
 
-    if app.Get("foo") != "bar" || app.Get("goo") != "tar" {
+    if app.(*DummyApp).Get("foo") != "bar" || app.(*DummyApp).Get("goo") != "tar" {
         t.Error("dummy app state update failed")
     }
 }

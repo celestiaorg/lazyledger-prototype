@@ -1,0 +1,12 @@
+syntax = "proto2";
+package lazyledger;
+
+message RegisterTransaction {
+    required bytes owner = 1;
+    required bytes name = 2;
+    required bytes signature = 3;
+}
+
+message RegisterTransactionMessage {
+    required bytes name = 1;
+}

@@ -6,10 +6,9 @@ import (
 
 type DummyApp struct {
     state MapStore
-    b *Blockchain
 }
 
-func NewDummyApp(state MapStore) *DummyApp {
+func NewDummyApp(state MapStore) Application {
     return &DummyApp{
         state: state,
     }

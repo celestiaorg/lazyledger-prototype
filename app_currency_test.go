@@ -16,9 +16,7 @@ func TestAppCurrencySimpleBlock(t *testing.T) {
 
     ms := NewSimpleMap()
     app := NewCurrency(ms, b)
-    var regApp Application
-    regApp = app
-    b.RegisterApplication(&regApp)
+    b.RegisterApplication(&app)
 
     privA, pubA, _ := crypto.GenerateSecp256k1Key(rand.Reader)
     _, pubB, _ := crypto.GenerateSecp256k1Key(rand.Reader)
@@ -27,10 +25,10 @@ func TestAppCurrencySimpleBlock(t *testing.T) {
     binary.BigEndian.PutUint64(pubABalanceBytes, 1000)
     ms.Put(pubABytes, pubABalanceBytes)
 
-    sb.AddMessage(app.GenerateTransaction(privA, pubB, 100, nil))
+    sb.AddMessage(app.(*Currency).GenerateTransaction(privA, pubB, 100, nil))
     b.ProcessBlock(sb)
 
-    if app.Balance(pubA) != 900 || app.Balance(pubB) != 100 {
+    if app.(*Currency).Balance(pubA) != 900 || app.(*Currency).Balance(pubB) != 100 {
         t.Error("test tranasaction failed: invalid post-balances")
     }
 }
@@ -43,9 +41,7 @@ func TestAppCurrencySimpleBlockDependency(t *testing.T) {
 
     ms := NewSimpleMap()
     app := NewCurrency(ms, b)
-    var regApp Application
-    regApp = app
-    b.RegisterApplication(&regApp)
+    b.RegisterApplication(&app)
 
     privA, pubA, _ := crypto.GenerateSecp256k1Key(rand.Reader)
     _, pubB, _ := crypto.GenerateSecp256k1Key(rand.Reader)
@@ -56,12 +52,12 @@ func TestAppCurrencySimpleBlockDependency(t *testing.T) {
 
     sb.AddMessage(*NewMessage([namespaceSize]byte{0}, []byte("foo")))
     hash, _, _ := sb.ProveDependency(0)
-    sb.AddMessage(app.GenerateTransaction(privA, pubB, 100, hash))
+    sb.AddMessage(app.(*Currency).GenerateTransaction(privA, pubB, 100, hash))
     _, proof, _ := sb.ProveDependency(0)
     sb.VerifyDependency(0, hash, proof)
     b.ProcessBlock(sb)
 
-    if app.Balance(pubA) != 900 || app.Balance(pubB) != 100 {
+    if app.(*Currency).Balance(pubA) != 900 || app.(*Currency).Balance(pubB) != 100 {
         t.Error("test tranasaction failed: invalid post-balances")
     }
 }
@@ -74,9 +70,7 @@ func TestAppCurrencyProbabilisticBlockDependency(t *testing.T) {
 
     ms := NewSimpleMap()
     app := NewCurrency(ms, b)
-    var regApp Application
-    regApp = app
-    b.RegisterApplication(&regApp)
+    b.RegisterApplication(&app)
 
     privA, pubA, _ := crypto.GenerateSecp256k1Key(rand.Reader)
     _, pubB, _ := crypto.GenerateSecp256k1Key(rand.Reader)
@@ -87,12 +81,12 @@ func TestAppCurrencyProbabilisticBlockDependency(t *testing.T) {
 
     pb.AddMessage(*NewMessage([namespaceSize]byte{0}, []byte("foo")))
     hash, _, _ := pb.ProveDependency(0)
-    pb.AddMessage(app.GenerateTransaction(privA, pubB, 100, hash))
+    pb.AddMessage(app.(*Currency).GenerateTransaction(privA, pubB, 100, hash))
     _, proof, _ := pb.ProveDependency(0)
     pb.VerifyDependency(0, hash, proof)
     b.ProcessBlock(pb)
 
-    if app.Balance(pubA) != 900 || app.Balance(pubB) != 100 {
+    if app.(*Currency).Balance(pubA) != 900 || app.(*Currency).Balance(pubB) != 100 {
         t.Error("test tranasaction failed: invalid post-balances")
     }
 }
@@ -105,9 +99,7 @@ func TestAppCurrencyProbabilisticBlock(t *testing.T) {
 
     ms := NewSimpleMap()
     app := NewCurrency(ms, b)
-    var regApp Application
-    regApp = app
-    b.RegisterApplication(&regApp)
+    b.RegisterApplication(&app)
 
     privA, pubA, _ := crypto.GenerateSecp256k1Key(rand.Reader)
     _, pubB, _ := crypto.GenerateSecp256k1Key(rand.Reader)
@@ -116,10 +108,10 @@ func TestAppCurrencyProbabilisticBlock(t *testing.T) {
     binary.BigEndian.PutUint64(pubABalanceBytes, 1000)
     ms.Put(pubABytes, pubABalanceBytes)
 
-    pb.AddMessage(app.GenerateTransaction(privA, pubB, 100, nil))
+    pb.AddMessage(app.(*Currency).GenerateTransaction(privA, pubB, 100, nil))
     b.ProcessBlock(pb)
 
-    if app.Balance(pubA) != 900 || app.Balance(pubB) != 100 {
+    if app.(*Currency).Balance(pubA) != 900 || app.(*Currency).Balance(pubB) != 100 {
         t.Error("test tranasaction failed: invalid post-balances")
     }
 }
