@@ -11,7 +11,10 @@ import (
 type Currency struct {
     state MapStore
     b *Blockchain
+    transferCallbacks []TransferCallback
 }
+
+type TransferCallback = func(from []byte, to []byte, value int)
 
 // NewCurrency creates a new currency instance.
 func NewCurrency(state MapStore, b *Blockchain) *Currency {
@@ -117,4 +120,14 @@ func (c *Currency) Balance(pubKey crypto.PubKey) uint64 {
         return 0
     }
     return binary.BigEndian.Uint64(balance)
+}
+
+func (c *Currency) AddTransfer(fn TransferCallback) {
+    c.transferCallbacks = append(c.transferCallbacks, fn)
+}
+
+func (c *Currency) triggerTransferCallbacks(from []byte, to []byte, value int) {
+    for _, fn := range c.transferCallbacks {
+        fn(from, to, value)
+    }
 }
