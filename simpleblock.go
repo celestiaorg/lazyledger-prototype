@@ -45,18 +45,22 @@ func ImportSimpleBlock(prevHash []byte, messages []Message) Block {
 func (sb *SimpleBlock) AddMessage(message Message) {
     sb.messages = append(sb.messages, message)
 
-    // Recompute the messagesRoot
-    ndf := NewNamespaceDummyFlagger()
-    fh := NewFlagHasher(ndf, sha256.New())
-    tree := merkletree.New(fh)
-    for _, message := range sb.messages {
-        tree.Push(message.Marshal())
-    }
-    sb.messagesRoot = tree.Root()
+    // Force recompututation of messagesRoot
+    sb.messagesRoot = nil
 }
 
 // MessagesRoot returns the Merkle root of the messages in the block.
 func (sb *SimpleBlock) MessagesRoot() []byte {
+    if sb.messagesRoot == nil {
+        ndf := NewNamespaceDummyFlagger()
+        fh := NewFlagHasher(ndf, sha256.New())
+        tree := merkletree.New(fh)
+        for _, message := range sb.messages {
+            tree.Push(message.Marshal())
+        }
+        sb.messagesRoot = tree.Root()
+    }
+
     return sb.messagesRoot
 }
 
@@ -64,7 +68,7 @@ func (sb *SimpleBlock) MessagesRoot() []byte {
 func (sb *SimpleBlock) Digest() []byte {
     hasher := sha256.New()
     hasher.Write(sb.prevHash)
-    hasher.Write(sb.messagesRoot)
+    hasher.Write(sb.MessagesRoot())
     return hasher.Sum(nil)
 }
 
@@ -81,7 +85,7 @@ func (sb *SimpleBlock) Valid() bool {
     for _, message := range sb.messages {
         tree.Push(message.Marshal())
     }
-    if bytes.Compare(tree.Root(), sb.messagesRoot) == 0 {
+    if bytes.Compare(tree.Root(), sb.MessagesRoot()) == 0 {
         return true
     }
     return false
@@ -166,7 +170,7 @@ func (sb *SimpleBlock) VerifyApplicationProof(namespace [namespaceSize]byte, pro
     } else {
         lh = NewHashLeafHasher(hashes)
     }
-    result, err := merkletree.VerifyRangeProof(lh, fh, proofStart, proofEnd, proof, sb.messagesRoot)
+    result, err := merkletree.VerifyRangeProof(lh, fh, proofStart, proofEnd, proof, sb.MessagesRoot())
     if !result || err != nil {
         return false
     }
@@ -219,7 +223,7 @@ func (sb *SimpleBlock) VerifyDependency(index int, hash []byte, proof [][]byte) 
     ndf := NewNamespaceDummyFlagger()
     fh := NewFlagHasher(ndf, sha256.New())
     lh := NewHashLeafHasher([][]byte{hash})
-    result, err := merkletree.VerifyRangeProof(lh, fh, index, index + 1, proof, sb.messagesRoot)
+    result, err := merkletree.VerifyRangeProof(lh, fh, index, index + 1, proof, sb.MessagesRoot())
     if result && err == nil {
         sb.provenDependencies[string(hash)] = true
         return true
