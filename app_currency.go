@@ -132,3 +132,7 @@ func (c *Currency) triggerTransferCallbacks(from []byte, to []byte, value int) {
         fn(from, to, value)
     }
 }
+
+func (c *Currency) StorageSize() int {
+    return c.state.storageSize()
+}

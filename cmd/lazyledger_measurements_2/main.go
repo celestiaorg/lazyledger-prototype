@@ -73,11 +73,11 @@ func generateSimpleBlock(currencyTxes int, otherTxes, txSize int) (*lazyledger.S
 }
 
 func generateProbabilisticBlock(currencyTxes int, otherTxes, txSize int) (*lazyledger.ProbabilisticBlock, [namespaceSize]byte) {
-    txSize -= namespaceSize
+    pb := lazyledger.NewProbabilisticBlock([]byte{0}, txSize)
+    txSize -= namespaceSize + 2
 
     bs := lazyledger.NewSimpleBlockStore()
     b := lazyledger.NewBlockchain(bs)
-    pb := lazyledger.NewProbabilisticBlock([]byte{0}, 256)
     ms := lazyledger.NewSimpleMap()
     app := lazyledger.NewCurrency(ms, b)
     b.RegisterApplication(&app)

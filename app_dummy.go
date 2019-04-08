@@ -55,3 +55,7 @@ func (app *DummyApp) GenerateTransaction(puts map[string]string) Message {
     data, _ := proto.Marshal(transaction)
     return *NewMessage(app.Namespace(), data)
 }
+
+func (app *DummyApp) StorageSize() int {
+    return app.state.storageSize()
+}

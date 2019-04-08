@@ -9,6 +9,7 @@ type MapStore interface {
     Get(key []byte) ([]byte, error) // Get gets the value for a key.
     Put(key []byte, value []byte) error // Put updates the value for a key.
     Del(key []byte) error // Del deletes a key.
+    storageSize() int
 }
 
 // InvalidKeyError is thrown when a key that does not exist is being accessed.
@@ -54,4 +55,14 @@ func (sm *SimpleMap) Del(key []byte) error {
         return nil
     }
     return &InvalidKeyError{Key: key}
+}
+
+func (sm *SimpleMap) storageSize() int {
+    s := 0
+    for k, v := range sm.m {
+        s += len(k)
+        s += len(v)
+    }
+
+    return s
 }

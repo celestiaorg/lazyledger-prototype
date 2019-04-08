@@ -13,10 +13,10 @@ func main() {
     txAmounts := []int{128, 2048}
     txSize := 128
     for _, txes := range txAmounts {
-        sb := generateSimpleBlock(txes, 128)
+        sb := generateSimpleBlock(txes, txSize)
         sbBandwidth := len(sb.PrevHash()) + len(sb.MessagesRoot()) + txSize * txes
 
-        pb := generateProbabilisticBlock(txes, 128)
+        pb := generateProbabilisticBlock(txes, txSize)
         req, _ := pb.RequestSamples(10)
         res := pb.RespondSamples(req)
         pbBandwidth := 0
@@ -50,8 +50,8 @@ func generateSimpleBlock(txes int, txSize int) *lazyledger.SimpleBlock {
 }
 
 func generateProbabilisticBlock(txes int, txSize int) *lazyledger.ProbabilisticBlock {
+    pb := lazyledger.NewProbabilisticBlock([]byte{0}, txSize)
     txSize -= namespaceSize + 2
-    pb := lazyledger.NewProbabilisticBlock([]byte{0}, 128)
 
     for i := 0; i < txes; i++ {
         messageData := make([]byte, txSize)
