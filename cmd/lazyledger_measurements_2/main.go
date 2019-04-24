@@ -49,7 +49,7 @@ func main() {
             }
         }
 
-        fmt.Println(txes, sbBandwidthMax, pbBandwidthMax)
+        fmt.Println(txes*txSize, sbBandwidthMax, pbBandwidthMax)
     }
 }
 

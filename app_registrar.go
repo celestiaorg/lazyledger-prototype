@@ -12,6 +12,7 @@ type Registrar struct {
     state MapStore
     currency *Currency
     owner []byte
+    namespace [namespaceSize]byte
 }
 
 func NewRegistrar(state MapStore, currency *Currency, owner []byte) Application {
@@ -56,9 +57,17 @@ func (app *Registrar) ProcessMessage(message Message) {
 }
 
 func (app *Registrar) Namespace() [namespaceSize]byte {
-    var namespace [namespaceSize]byte
-    copy(namespace[:], append([]byte("reggie"), app.owner[:namespaceSize-6]...))
-    return namespace
+    var empty [namespaceSize]byte
+    if app.namespace == empty {
+        var namespace [namespaceSize]byte
+        copy(namespace[:], []byte("reggie"))
+        return namespace
+    }
+    return app.namespace
+}
+
+func (app *Registrar) SetNamespace(namespace [namespaceSize]byte) {
+    app.namespace = namespace
 }
 
 func (app *Registrar) SetBlockHead(hash []byte) {
