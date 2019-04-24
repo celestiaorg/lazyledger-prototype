@@ -13,32 +13,43 @@ const namespaceSize = 8
 
 func main() {
     currencyTxes := 10
-    txAmounts := []int{128, 256, 384, 512, 640, 1024}
+    txAmounts := []int{128, 256, 384, 512, 640, 768, 896, 1024}
     txSize := 256
     for _, txes := range txAmounts {
-        sb, ns := generateSimpleBlock(currencyTxes, txes, txSize)
-        _, _, proofs1, messages1, _ := sb.ApplicationProof(ns)
-        sbBandwidth := 0
-        for _, msg := range *messages1 {
-            sbBandwidth += len(msg.Marshal())
-        }
-        for _, hash := range proofs1 {
-            sbBandwidth += len(hash)
-        }
+        sbBandwidthMax := 0
+        pbBandwidthMax := 0
 
-        pb, ns := generateProbabilisticBlock(currencyTxes, txes, txSize)
-        _, _, proofs2, messages2, _ := pb.ApplicationProof(ns)
-        pbBandwidth := 0
-        for _, msg := range *messages2 {
-            pbBandwidth += len(msg.Marshal())
-        }
-        for _, proof := range proofs2 {
-            for _, hash := range proof {
-                pbBandwidth += len(hash)
+        for i := 0; i < 10; i++ {
+            sb, ns := generateSimpleBlock(currencyTxes, txes, txSize)
+            _, _, proofs1, messages1, _ := sb.ApplicationProof(ns)
+            sbBandwidth := 0
+            for _, msg := range *messages1 {
+                sbBandwidth += len(msg.Marshal())
+            }
+            for _, hash := range proofs1 {
+                sbBandwidth += len(hash)
+            }
+            if sbBandwidth > sbBandwidthMax {
+                sbBandwidthMax = sbBandwidth
+            }
+
+            pb, ns := generateProbabilisticBlock(currencyTxes, txes, txSize)
+            _, _, proofs2, messages2, _ := pb.ApplicationProof(ns)
+            pbBandwidth := 0
+            for _, msg := range *messages2 {
+                pbBandwidth += len(msg.Marshal())
+            }
+            for _, proof := range proofs2 {
+                for _, hash := range proof {
+                    pbBandwidth += len(hash)
+                }
+            }
+            if pbBandwidth > pbBandwidthMax {
+                pbBandwidthMax = pbBandwidth
             }
         }
 
-        fmt.Println(txes, sbBandwidth, pbBandwidth)
+        fmt.Println(txes, sbBandwidthMax, pbBandwidthMax)
     }
 }
 
