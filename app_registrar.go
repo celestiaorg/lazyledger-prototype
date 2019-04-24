@@ -57,7 +57,7 @@ func (app *Registrar) ProcessMessage(message Message) {
 
 func (app *Registrar) Namespace() [namespaceSize]byte {
     var namespace [namespaceSize]byte
-    copy(namespace[:], []byte("reggie"))
+    copy(namespace[:], append([]byte("reggie"), app.owner[:namespaceSize-6]...))
     return namespace
 }
 
