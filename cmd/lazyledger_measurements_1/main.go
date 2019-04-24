@@ -10,7 +10,7 @@ import (
 const namespaceSize = 8
 
 func main() {
-    txAmounts := []int{128, 2048}
+    txAmounts := []int{128, 256, 384, 512, 640, 1024}
     txSize := 128
     for _, txes := range txAmounts {
         sb := generateSimpleBlock(txes, txSize)
