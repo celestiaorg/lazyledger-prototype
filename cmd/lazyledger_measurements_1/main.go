@@ -4,7 +4,7 @@ import (
     "fmt"
     "crypto/rand"
 
-    "github.com/musalbas/lazyledger-prototype"
+    "github.com/LazyLedger/lazyledger-prototype"
 )
 
 const namespaceSize = 8
