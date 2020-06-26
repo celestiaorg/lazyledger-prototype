@@ -109,7 +109,7 @@ func (pb *ProbabilisticBlock) eds() *rsmt2d.ExtendedDataSquare {
             copy(freshPaddingShare, paddingShare)
             data = append(data, freshPaddingShare)
         }
-        pb.cachedEds, _ = rsmt2d.ComputeExtendedDataSquare(data, rsmt2d.CodecRSGF8)
+        pb.cachedEds, _ = rsmt2d.ComputeExtendedDataSquare(data, rsmt2d.RSGF8)
     }
 
     return pb.cachedEds
