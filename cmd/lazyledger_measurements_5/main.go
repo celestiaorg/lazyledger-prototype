@@ -5,7 +5,7 @@ import (
     "encoding/binary"
     "fmt"
 
-    "github.com/LazyLedger/lazyledger-prototype"
+    "github.com/lazyledger/lazyledger-prototype"
     "github.com/libp2p/go-libp2p-crypto"
 )
 

@@ -5,7 +5,7 @@ import (
     "encoding/binary"
     "fmt"
 
-    "github.com/musalbas/lazyledger-prototype"
+    "github.com/lazyledger/lazyledger-prototype"
     "github.com/libp2p/go-libp2p-crypto"
 )
 
@@ -20,7 +20,7 @@ func main() {
     privA, pubA, _ = crypto.GenerateSecp256k1Key(rand.Reader)
     _, pubB, _ = crypto.GenerateSecp256k1Key(rand.Reader)
     _, pubC, _ = crypto.GenerateSecp256k1Key(rand.Reader)
-    
+
     registrarTxes := 10
     txAmounts := []int{128, 256, 384, 512, 640, 768, 896, 1024}
     txSize := 256
